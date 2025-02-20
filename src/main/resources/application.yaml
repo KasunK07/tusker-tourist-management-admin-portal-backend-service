@@ -1,0 +1,33 @@
+server:
+  port: 9090
+spring:
+  application:
+    name: touristmanagement
+  data:
+    mongodb:
+      uri: mongodb+srv://tuskerlankatours:Tuskertours07@cluster0.5obzm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      database: tuskers_tour_management
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+logging:
+  level:
+    root: INFO
+    com.tuskerlanka: TRACE
+  file:
+    name: logs/tusker_tour_management_application.log
+  logback:
+    rollingpolicy:
+      maxHistory: 7 # After 7 days, older files are automatically deleted
+
+package:
+  image:
+    folder:
+      path: E:\\PersonalProjects\\admin_backend\\tusker-tourist-management-admin-portal-backend-service\\package_images # Change this to your path
+
+jwt:
+  secret-key: e0b8ae002ea385b889bde1982525ac761498c14cbbdc63d2b5969b849627c1f9ad2dbec0fa4ff5e413a352f794115bb31834977941fae8b6daa0c909b7ff4e57a765a2057f7af3574259ae0db1ce4d4feceea1d5c0821d03cada2352a5c01522cca9533e15eb340507d5f6bf51161628d3da5bbb008cad806671c5e079ada1f1887c5428ca7e4613a180e308fbe107e0503220093fb61b17506239aa71f8e5f8c85d5f03b89c4fd7ace99bac45952cbfe31681f0ae7b9072c4251b04a40269c4069f409c6e9527257e957671c8ae362b24e2c4f5aad4f54734651e9a28926aa378d132744998d6ca431f0ec08b3abfb8a08039e60a0c25deb6f9ab997ee0deb310e215e5f3a8fbff1f303c89f1d60857a5b429a0455c4bcd394645933849ff793f4f1d153f6b6980a5c45c123cfb51abf52f640c9e96beeed87600ce9588f51c
