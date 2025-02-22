@@ -20,6 +20,8 @@ public enum ResponseCode {
     PACKAGE_CREATE_ERROR("Package creation failed", "", null, 0),
     PACKAGE_UPDATED_SUCCESSFULLY("Package updated successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     PACKAGE_UPDATE_ERROR("Package update failed", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    PACKAGE_DELETED_SUCCESSFULLY("Package deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    PACKAGE_DELETE_ERROR("Package deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
     DATA_RETRIEVED_SUCCESS("Data retrieved successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     DATA_RETRIEVED_ERROR("Failed to retrieve data", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),

@@ -27,4 +27,5 @@ public class DayTours {
 
     private Set<String> imageIds;
 
+    private String mimeType;
 }

@@ -15,4 +15,6 @@ public class DayToursImageResponseDto {
     private String imagePath;
 
     private byte[] imageData;
+
+    private String mimeType;
 }

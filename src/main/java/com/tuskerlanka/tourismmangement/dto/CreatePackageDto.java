@@ -18,7 +18,7 @@ public class CreatePackageDto {
     private String name;
 
     @NotBlank(message = "A description is required")
-    @Size(max = 500, message = "Description has to be less than 500 characters.")
+    @Size(max = 1000, message = "Description has to be less than 500 characters.")
     @Size(min = 10, message = "Description has to be more than 10 characters.")
     private String description;
 

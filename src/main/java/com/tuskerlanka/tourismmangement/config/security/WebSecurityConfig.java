@@ -32,11 +32,11 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf
                         .csrfTokenRequestHandler(csrfTokenRequestAttributeHandler)
-                        .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/package/**","/api/v1/dayTours")
+                        .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/package/**","/api/v1/dayTours/**")
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(authReq -> authReq
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/package/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/package/**","/api/v1/dayTours/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(Customizer.withDefaults())

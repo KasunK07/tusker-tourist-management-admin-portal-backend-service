@@ -16,4 +16,6 @@ public interface DayToursService {
     List<DayToursResponseDto> findAllDayTours() throws ResourceNotFoundException;
 
     DayToursResponseDto findDayTourById(String imageId) throws ResourceNotFoundException;
+
+    byte[] downloadImage(String id);
 }

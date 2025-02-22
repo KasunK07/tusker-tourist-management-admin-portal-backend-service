@@ -5,6 +5,7 @@ import com.tuskerlanka.tourismmangement.dto.CreatePackageDto;
 import com.tuskerlanka.tourismmangement.dto.PackageResponseDto;
 import com.tuskerlanka.tourismmangement.dto.UpdatePackageDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
@@ -95,5 +96,19 @@ public class PackageController {
         PackageResponseDto response = this.packageService.findById(packageId);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, response));
+    }
+
+    @DeleteMapping(path = "/delete/{packageId}")
+    public ResponseEntity<ApiResponse> delete(@PathVariable String packageId) throws BaseException {
+        logger.info("entering delete package api end point...");
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setMethod("DELETE");
+        auditLog.setEndPoint(END_POINT+"/delete");
+        auditLog.setUsername(USER_SYSTEM);
+
+        packageService.deletePackage(packageId,auditLog);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.PACKAGE_DELETED_SUCCESSFULLY));
     }
 }
