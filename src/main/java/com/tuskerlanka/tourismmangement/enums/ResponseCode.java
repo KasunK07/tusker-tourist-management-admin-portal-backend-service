@@ -32,7 +32,7 @@ public enum ResponseCode {
     DAY_TOUR_CREATED_SUCCESSFULLY("Day tour created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     DAY_TOUR_CREATE_ERROR("Day tour creation failed", "", null, 0),
     DAY_TOUR_DELETED_SUCCESSFULLY("Day tour deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
-    DAY_TOUR_DELETE_ERROR("Day tour deletion failed", "", HttpStatus.OK, HttpStatus.OK.value());
+    DAY_TOUR_DELETE_ERROR("Day tour deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
     RECORD_DOES_NOT_EXIST("No such record found", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
     RECORD_ALREADY_EXISTS("The record already exists", "", HttpStatus.CONFLICT, HttpStatus.CONFLICT.value()),
