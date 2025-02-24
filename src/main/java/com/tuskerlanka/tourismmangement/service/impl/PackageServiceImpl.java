@@ -243,7 +243,6 @@ public class PackageServiceImpl implements PackageService {
                 ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Package image is not available");
                 throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
             }
-
             this.packageImageRepository.delete(packageImageOptional.get());
             logger.info("image {} successfully removed from the db", imageName);
         } catch (ResourceNotFoundException ex) {
@@ -286,7 +285,6 @@ public class PackageServiceImpl implements PackageService {
                 }
                 this.packageImageRepository.delete(imageOptional.get());
             }
-
             for(String itineraryId : itineraryIds) {
                 Optional<PackageItinerary> itineraryOptional = this.packageItineraryRepository.findById(itineraryId);
 

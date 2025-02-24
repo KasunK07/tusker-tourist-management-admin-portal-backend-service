@@ -21,5 +21,5 @@ public class DayToursResponseDto {
 
     private String description;
 
-    private DayToursImageResponseDto imageDetails;
+    private List<DayToursImageResponseDto> imageDetails;
 }

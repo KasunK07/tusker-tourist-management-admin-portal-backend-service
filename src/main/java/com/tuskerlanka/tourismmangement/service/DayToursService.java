@@ -3,6 +3,7 @@ package com.tuskerlanka.tourismmangement.service;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateDayToursDto;
 import com.tuskerlanka.tourismmangement.dto.DayToursResponseDto;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +17,8 @@ public interface DayToursService {
     List<DayToursResponseDto> findAllDayTours() throws ResourceNotFoundException;
 
     DayToursResponseDto findDayTourById(String imageId) throws ResourceNotFoundException;
+
+    void deleteDayToursById(String tourId, AuditLog auditLog) throws BaseException;
 
     byte[] downloadImage(String id);
 }
