@@ -1,4 +1,4 @@
-package com.tuskerlanka.tourismmangement.validation;
+package com.tuskerlanka.tourismmangement.validation.image;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

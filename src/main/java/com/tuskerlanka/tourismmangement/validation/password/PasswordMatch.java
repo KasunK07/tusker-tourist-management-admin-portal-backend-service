@@ -1,4 +1,4 @@
-package com.tuskerlanka.tourismmangement.validation;
+package com.tuskerlanka.tourismmangement.validation.password;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -8,14 +8,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ImageValidator.class)
-public @interface ImageFile {
+@Constraint(validatedBy = PasswordMatchValidator.class)
+public @interface PasswordMatch {
 
-    String message() default "Invalid file type. Only JPEG, JPG and PNG files are allowed.";
-
+    String message() default "Password do not match.";
     Class<?>[] groups() default {};
-
     Class<? extends Payload>[] payload() default {};
 }

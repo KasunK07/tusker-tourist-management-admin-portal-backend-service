@@ -3,16 +3,13 @@ package com.tuskerlanka.tourismmangement.controller;
 
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateDayToursDto;
-import com.tuskerlanka.tourismmangement.dto.CreatePackageDto;
 import com.tuskerlanka.tourismmangement.dto.DayToursResponseDto;
-import com.tuskerlanka.tourismmangement.dto.PackageResponseDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
-import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.DayToursService;
-import com.tuskerlanka.tourismmangement.validation.ImageFile;
+import com.tuskerlanka.tourismmangement.validation.image.ImageFile;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

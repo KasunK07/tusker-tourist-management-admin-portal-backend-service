@@ -26,5 +26,4 @@ public class DayTours {
     private LocalDateTime createdAt;
 
     private Set<String> imageIds;
-
 }

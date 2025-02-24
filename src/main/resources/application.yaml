@@ -5,8 +5,10 @@ spring:
     name: touristmanagement
   data:
     mongodb:
-      uri: mongodb+srv://tuskerlankatours:Tuskertours07@cluster0.5obzm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      uri: mongodb://localhost:27017
       database: tuskers_tour_management
+
+# mongodb+srv://tuskerlankatours:Tuskertours07@cluster0.5obzm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 
   servlet:
     multipart:

@@ -68,7 +68,7 @@ public class AuthenticationController {
                 .secure(false) // @TODO: Set to true in production (HTTPS required)
                 .sameSite("String")
                 .path("/")
-                .maxAge(0) // 7 days
+                .maxAge(0)
                 .build();
 
         ResponseCode.SUCCESS.setMessage("Logged out successfully");

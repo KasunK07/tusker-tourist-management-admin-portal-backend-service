@@ -13,6 +13,9 @@ public enum ResponseCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "", HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.value()),
     INVALID_ARGUMENT_ERROR(HttpStatus.BAD_REQUEST.getReasonPhrase(), "Validation Error", HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.value()),
 
+    CREATE_USER_SUCCESS("User created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    CREATE_USER_ERROR("User creation failed", "", null, 0),
+
     AUTHENTICATION_SUCCESS("User successfully authenticated", "", HttpStatus.OK, HttpStatus.NO_CONTENT.value()),
     AUTHENTICATION_ERROR("Unsuccessful authentication", HttpStatus.UNAUTHORIZED.getReasonPhrase(), HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.value() ),
 
@@ -25,7 +28,12 @@ public enum ResponseCode {
     DATA_RETRIEVED_ERROR("Failed to retrieve data", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
 
     DAY_TOUR_CREATED_SUCCESSFULLY("Day tour created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
-    DAY_TOUR_CREATE_ERROR("Day tour creation failed", "", null, 0);
+    DAY_TOUR_CREATE_ERROR("Day tour creation failed", "", null, 0),
+
+    RECORD_DOES_NOT_EXIST("No such record found", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
+    RECORD_ALREADY_EXISTS("The record already exists", "", HttpStatus.CONFLICT, HttpStatus.CONFLICT.value()),
+
+    INVALID_TOKEN("Unauthorized", "The provided token is invalid or has expired. Please log in again.", HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.value());
 
     private String message;
     private String reason;

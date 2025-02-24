@@ -1,31 +1,30 @@
 package com.tuskerlanka.tourismmangement.document;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
+import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Data
-public class User {
+@Getter @Setter
+public class User extends BaseDocument {
 
     @Id
     private String id;
-
-    private String username;
 
     private String password;
 
     private String email;
 
+    private String role;
+
+    @Field(name = "is_enabled")
     private boolean isEnabled;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
-
+    @Field(name = "last_logging")
     private LocalDateTime lastLogging;
 }
