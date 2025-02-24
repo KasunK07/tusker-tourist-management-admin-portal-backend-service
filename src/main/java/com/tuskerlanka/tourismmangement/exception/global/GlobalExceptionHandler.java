@@ -2,6 +2,7 @@ package com.tuskerlanka.tourismmangement.exception.global;
 
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
+import com.tuskerlanka.tourismmangement.exception.CreateUserException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,8 +29,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         Map<String, String> errorMap = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(fieldError -> {
-            errorMap.put("field", fieldError.getField());
+        ex.getBindingResult().getAllErrors().forEach(fieldError -> {
+            String fieldName;
+            if (fieldError instanceof FieldError) {
+                fieldName = ((FieldError) fieldError).getField();
+            } else {
+                fieldName = fieldError.getObjectName();
+            }
+            errorMap.put("field", fieldName);
             errorMap.put("message", fieldError.getDefaultMessage());
             LOGGER.error("{}", fieldError.getCode());
         });
@@ -45,7 +53,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CreatePackageException.class)
-    public ResponseEntity<ApiResponse> handleResourceNotFoundException(CreatePackageException ex) {
+    public ResponseEntity<ApiResponse> handleCreatePackageException(CreatePackageException ex) {
+        LOGGER.error("error occur in handleResourceNotFoundException: {}", ex.getResponseCode());
+        return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
+    }
+
+
+    @ExceptionHandler(CreateUserException.class)
+    public ResponseEntity<ApiResponse> handleCreateUserException(CreateUserException ex) {
         LOGGER.error("error occur in handleResourceNotFoundException: {}", ex.getResponseCode());
         return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
     }

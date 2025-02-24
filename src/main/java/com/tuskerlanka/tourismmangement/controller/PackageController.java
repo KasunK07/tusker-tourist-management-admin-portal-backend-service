@@ -11,7 +11,7 @@ import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.PackageService;
-import com.tuskerlanka.tourismmangement.validation.ImageFile;
+import com.tuskerlanka.tourismmangement.validation.image.ImageFile;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

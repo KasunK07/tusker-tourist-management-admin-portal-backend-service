@@ -1,8 +1,8 @@
 package com.tuskerlanka.tourismmangement.service.impl;
 
-import com.tuskerlanka.tourismmangement.document.RefreshToken;
+import com.tuskerlanka.tourismmangement.document.Token;
 import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
-import com.tuskerlanka.tourismmangement.repository.RefreshTokenRepository;
+import com.tuskerlanka.tourismmangement.repository.TokenRepository;
 import com.tuskerlanka.tourismmangement.service.AuthenticationService;
 import com.tuskerlanka.tourismmangement.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -32,7 +32,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtUtil jwtUtil;
 
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRepository tokenRepository;
 
     @Override
     public Map<String, String> login(AuthenticationDto authenticationDto) {
@@ -46,12 +46,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (authenticateResponse != null && authenticateResponse.isAuthenticated()) {
             final String authorities = authenticateResponse.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
-            final String accessToken = this.jwtUtil.generateAccessToken(username, authorities);
+            // final String accessToken = this.jwtUtil.generateAccessToken(username, authorities);
             final String refreshToken = this.jwtUtil.generateRefreshToken(username);
             
             this.saveRefreshToken(refreshToken);
 
-            tokenMap.put("access_token", accessToken);
+            tokenMap.put("access_token", null);
             tokenMap.put("refresh_token", refreshToken);
 
             return tokenMap;
@@ -64,10 +64,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void logout(String refreshToken) {
         if (refreshToken != null) {
             String refreshJti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti", String.class));
-            Optional<RefreshToken> tokenOptional = this.refreshTokenRepository.findByJti(refreshJti);
+            Optional<Token> tokenOptional = this.tokenRepository.findByJti(refreshJti);
             tokenOptional.ifPresent(token -> {
                 token.revoke();
-                this.refreshTokenRepository.save(token);
+                this.tokenRepository.save(token);
             });
         }
     }
@@ -76,11 +76,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         Date date = this.jwtUtil.extractClaim(refreshToken, Claims::getExpiration);
         String jti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti", String.class));
 
-        RefreshToken tokenDocument = RefreshToken.builder()
+        Token tokenDocument = Token.builder()
                 .expiryDate(date)
                 .jti(jti)
                 .build();
 
-        this.refreshTokenRepository.save(tokenDocument);
+        this.tokenRepository.save(tokenDocument);
     }
 }

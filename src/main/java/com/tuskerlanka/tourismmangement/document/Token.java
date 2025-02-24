@@ -6,20 +6,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
-@Document(collection = "refresh_token")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Data
-public class RefreshToken {
+public class Token {
 
     @Id
     private String id;
+
     private String jti;
+
+    @Field(name = "expiry_date")
     private Date expiryDate;
+
     private boolean revoked = false;
 
     public void revoke() {
