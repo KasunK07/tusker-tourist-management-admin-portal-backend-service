@@ -35,7 +35,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DayToursServiceImpl implements DayToursService {
 
-    private final static Logger logger = LoggerFactory.getLogger(PackageRepository.class);
+    private final static Logger logger = LoggerFactory.getLogger(DayToursRepository.class);
 
     private final DayToursRepository dayToursRepository;
 

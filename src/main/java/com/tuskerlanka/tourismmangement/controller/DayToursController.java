@@ -33,7 +33,7 @@ import static com.tuskerlanka.tourismmangement.constants.ApplicationConstants.US
 @CrossOrigin(origins = "*")
 public class DayToursController {
 
-    private final static Logger logger = LoggerFactory.getLogger(PackageController.class);
+    private final static Logger logger = LoggerFactory.getLogger(DayToursController.class);
 
     private final DayToursService dayToursService;
 
@@ -56,7 +56,7 @@ public class DayToursController {
 
     @GetMapping(path = "/getAll")
     public ResponseEntity<ApiResponse> getAll() throws ResourceNotFoundException {
-        logger.info("entering getAll package api end point..");
+        logger.info("entering getAll day tours api end point..");
 
         List<DayToursResponseDto> response = this.dayToursService.findAllDayTours();
 
@@ -66,7 +66,7 @@ public class DayToursController {
 
     @GetMapping(path = "/read/{tourId}")
     public ResponseEntity<ApiResponse> readBy(@PathVariable String tourId) throws ResourceNotFoundException {
-        logger.info("entering read package by its id end point...");
+        logger.info("entering read day tours by its id end point...");
 
         DayToursResponseDto response = this.dayToursService.findDayTourById(tourId);
 
@@ -75,7 +75,7 @@ public class DayToursController {
 
     @DeleteMapping(path = "/delete/{tourId}")
     public ResponseEntity<ApiResponse> delete(@PathVariable String tourId) throws BaseException {
-        logger.info("entering delete package api end point...");
+        logger.info("entering delete day tours api end point...");
 
         AuditLog auditLog = new AuditLog();
         auditLog.setMethod("DELETE");

@@ -34,6 +34,16 @@ public enum ResponseCode {
     DAY_TOUR_DELETED_SUCCESSFULLY("Day tour deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     DAY_TOUR_DELETE_ERROR("Day tour deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
+    DESTINATION_CREATED_SUCCESSFULLY("Destination created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    DESTINATION_CREATE_ERROR("Destination creation failed", "", null, 0),
+    DESTINATION_DELETED_SUCCESSFULLY("Destination deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    DESTINATION_DELETE_ERROR("Destination deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
+    TAILOR_MADE_PACKAGE_CREATED_SUCCESSFULLY("Daily made package created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    TAILOR_MADE_PACKAGE_CREATE_ERROR("Daily made package creation failed", "", null, 0),
+    TAILOR_MADE_PACKAGE_DELETED_SUCCESSFULLY("Daily made package deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    TAILOR_MADE_PACKAGE_DELETE_ERROR("Daily made package deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
     RECORD_DOES_NOT_EXIST("No such record found", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
     RECORD_ALREADY_EXISTS("The record already exists", "", HttpStatus.CONFLICT, HttpStatus.CONFLICT.value()),
 
