@@ -5,6 +5,7 @@ import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateDayToursDto;
 import com.tuskerlanka.tourismmangement.dto.DayToursResponseDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
@@ -32,7 +33,7 @@ import static com.tuskerlanka.tourismmangement.constants.ApplicationConstants.US
 @CrossOrigin(origins = "*")
 public class DayToursController {
 
-    private final static Logger logger = LoggerFactory.getLogger(PackageController.class);
+    private final static Logger logger = LoggerFactory.getLogger(DayToursController.class);
 
     private final DayToursService dayToursService;
 
@@ -55,7 +56,7 @@ public class DayToursController {
 
     @GetMapping(path = "/getAll")
     public ResponseEntity<ApiResponse> getAll() throws ResourceNotFoundException {
-        logger.info("entering getAll package api end point..");
+        logger.info("entering getAll day tours api end point..");
 
         List<DayToursResponseDto> response = this.dayToursService.findAllDayTours();
 
@@ -65,11 +66,24 @@ public class DayToursController {
 
     @GetMapping(path = "/read/{tourId}")
     public ResponseEntity<ApiResponse> readBy(@PathVariable String tourId) throws ResourceNotFoundException {
-        logger.info("entering read package by its id end point...");
+        logger.info("entering read day tours by its id end point...");
 
         DayToursResponseDto response = this.dayToursService.findDayTourById(tourId);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, response));
     }
 
+    @DeleteMapping(path = "/delete/{tourId}")
+    public ResponseEntity<ApiResponse> delete(@PathVariable String tourId) throws BaseException {
+        logger.info("entering delete day tours api end point...");
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setMethod("DELETE");
+        auditLog.setEndPoint(END_POINT+"/delete");
+        auditLog.setUsername(USER_SYSTEM);
+
+        dayToursService.deleteDayToursById(tourId,auditLog);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DAY_TOUR_DELETED_SUCCESSFULLY));
+    }
 }

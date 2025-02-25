@@ -5,7 +5,7 @@ spring:
     name: touristmanagement
   data:
     mongodb:
-      uri: mongodb://localhost:27017
+      uri:  mongodb+srv://tuskerlankatours:Tuskertours07@cluster0.5obzm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: tuskers_tour_management
 
 # mongodb+srv://tuskerlankatours:Tuskertours07@cluster0.5obzm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

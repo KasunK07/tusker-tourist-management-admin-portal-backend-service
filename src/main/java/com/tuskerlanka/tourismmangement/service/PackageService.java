@@ -4,10 +4,7 @@ import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreatePackageDto;
 import com.tuskerlanka.tourismmangement.dto.PackageResponseDto;
 import com.tuskerlanka.tourismmangement.dto.UpdatePackageDto;
-import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
-import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
-import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
-import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
+import com.tuskerlanka.tourismmangement.exception.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -23,6 +20,8 @@ public interface PackageService {
     PackageResponseDto findById(String packageId) throws ResourceNotFoundException;
 
     void removePackageImageByImageName(String packageId, String imageName, AuditLog auditLog) throws ResourceNotFoundException, ResourceDeleteException;
+
+    void deletePackage(String packageId, AuditLog auditLog) throws BaseException;
 
     byte[] downloadImage(String id);
 }

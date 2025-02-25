@@ -26,4 +26,6 @@ public class TourImage {
 
     private String dayToursId;
 
+    private String mimeType;
+
 }

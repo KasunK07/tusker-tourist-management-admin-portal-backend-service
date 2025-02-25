@@ -10,10 +10,7 @@ import com.tuskerlanka.tourismmangement.enums.AuditLogAction;
 import com.tuskerlanka.tourismmangement.enums.AuditLogStatus;
 import com.tuskerlanka.tourismmangement.enums.PackageStatus;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
-import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
-import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
-import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
-import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
+import com.tuskerlanka.tourismmangement.exception.*;
 import com.tuskerlanka.tourismmangement.repository.PackageImageRepository;
 import com.tuskerlanka.tourismmangement.repository.PackageItineraryRepository;
 import com.tuskerlanka.tourismmangement.repository.PackageRepository;
@@ -53,7 +50,6 @@ public class PackageServiceImpl implements PackageService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    // Is it a one image or multiple images - ask from Kasun
     public void save(CreatePackageDto createPackageDto, MultipartFile files[], AuditLog auditLog) throws CreatePackageException {
         logger.info("entering save package service impl...");
         auditLog.setAction(AuditLogAction.ADD_NEW_PACKAGE);
@@ -95,7 +91,6 @@ public class PackageServiceImpl implements PackageService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    // Is it a one image or multiple images - ask from Kasun
     public void updatePackage(String packageId, UpdatePackageDto updatePackageDto, MultipartFile file, AuditLog auditLog) throws ResourceNotFoundException, UpdatePackageException {
         logger.info("entering update package service impl...");
         auditLog.setAction(AuditLogAction.UPDATE_PACKAGE);
@@ -248,7 +243,6 @@ public class PackageServiceImpl implements PackageService {
                 ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Package image is not available");
                 throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
             }
-
             this.packageImageRepository.delete(packageImageOptional.get());
             logger.info("image {} successfully removed from the db", imageName);
         } catch (ResourceNotFoundException ex) {
@@ -261,6 +255,50 @@ public class PackageServiceImpl implements PackageService {
             ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
             throw new ResourceDeleteException(ResponseCode.INTERNAL_SERVER_ERROR);
         } finally {
+            this.auditLogService.save(auditLog);
+        }
+    }
+
+    @Override
+    public void deletePackage(String packageId, AuditLog auditLog) throws BaseException{
+        logger.info("entering deletePackage service impl...");
+        try{
+            Optional<Package> packageOptional = this.packageRepository.findById(packageId);
+            if (packageOptional.isEmpty()) {
+                ResponseCode.DATA_RETRIEVED_ERROR.setReason("Package is not available");
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            Package packageToDelete = packageOptional.get();
+
+            Set<String> imageIds = packageToDelete.getImageIds();
+            Set<String> itineraryIds = packageToDelete.getItineraryIds();
+
+            for (String imageId : imageIds) {
+                Optional<PackageImage> imageOptional = this.packageImageRepository.findById(imageId);
+
+                if(imageOptional.isPresent()) {
+                    File imageFile = new File(imageOptional.get().getImagePath());
+                    if(imageFile.exists()) {
+                        logger.info("Failed to Delete the image Path {}", imageId);
+                    }
+                }
+                this.packageImageRepository.delete(imageOptional.get());
+            }
+            for(String itineraryId : itineraryIds) {
+                Optional<PackageItinerary> itineraryOptional = this.packageItineraryRepository.findById(itineraryId);
+
+                itineraryOptional.ifPresent(packageItineraryRepository::delete);
+            }
+
+            this.packageRepository.delete(packageToDelete);
+            logger.info("Package {} successfully deleted", packageId);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+        }catch(Exception ex){
+            logger.error("error occur when deleting a package: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+        }finally {
             this.auditLogService.save(auditLog);
         }
     }

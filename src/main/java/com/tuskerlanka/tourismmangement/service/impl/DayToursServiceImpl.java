@@ -3,14 +3,15 @@ package com.tuskerlanka.tourismmangement.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.document.DayTours;
+import com.tuskerlanka.tourismmangement.document.PackageImage;
 import com.tuskerlanka.tourismmangement.document.TourImage;
-import com.tuskerlanka.tourismmangement.dto.CreateDayToursDto;
-import com.tuskerlanka.tourismmangement.dto.DayToursImageResponseDto;
-import com.tuskerlanka.tourismmangement.dto.DayToursResponseDto;
+import com.tuskerlanka.tourismmangement.dto.*;
 import com.tuskerlanka.tourismmangement.enums.AuditLogAction;
 import com.tuskerlanka.tourismmangement.enums.AuditLogStatus;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
+import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.repository.DayToursImageRepository;
 import com.tuskerlanka.tourismmangement.repository.DayToursRepository;
@@ -28,16 +29,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class DayToursServiceImpl implements DayToursService {
 
-    private final static Logger logger = LoggerFactory.getLogger(PackageRepository.class);
+    private final static Logger logger = LoggerFactory.getLogger(DayToursRepository.class);
 
     private final DayToursRepository dayToursRepository;
 
@@ -60,32 +58,21 @@ public class DayToursServiceImpl implements DayToursService {
 
         try{
             logger.info("{}",createDayToursDto);
-            String getFileName = imageFile.getOriginalFilename();
-            String imagePath = imageFolderPath + getFileName;
+            Set<String> imageIdSet = new HashSet<>();
 
-            DayTours dayTours = this.objectMapper.convertValue(createDayToursDto,DayTours.class);
-            dayTours.setCreatedAt(LocalDateTime.now());
+            DayTours newTours = this.objectMapper.convertValue(createDayToursDto,DayTours.class);
+            newTours.setCreatedAt(LocalDateTime.now());
 
-            DayTours savedDayTours = this.dayToursRepository.save(dayTours);
+            DayTours savedDayTours = this.dayToursRepository.save(newTours);
+            logger.info("new package successfully added to the db");
 
-            final String tourId = savedDayTours.getId();
+            final String dayToursId = savedDayTours.getId();
 
-            TourImage dayToursImage = TourImage.builder()
-                    .dayToursId(tourId)
-                    .imagePath(imagePath)
-                    .imageName(imageFile.getOriginalFilename())
-                    .imageType(imageFile.getContentType())
-                    .build();
+            this.savePackageImages(imageFile, dayToursId, imageIdSet);
 
-            TourImage tourImage = this.imageRepository.save(dayToursImage);
-
-            savedDayTours.setImageIds(Set.of(tourImage.getId()));
+            savedDayTours.setImageIds(imageIdSet);
             this.dayToursRepository.save(savedDayTours);
-
-            imageFile.transferTo(new File(imagePath));
-            logger.info("new day tour images added to the file system");
-
-            auditLog.setStatus(AuditLogStatus.SUCCESS);
+            logger.info("package image ids are successfully saved with package");
 
         }catch (Exception e){
             logger.error("unknown error occur when creating a new day tour: {}", e.getMessage());
@@ -94,6 +81,29 @@ public class DayToursServiceImpl implements DayToursService {
             throw new CreateDayTourException(ResponseCode.INTERNAL_SERVER_ERROR);
         }finally {
             this.auditLogService.save(auditLog);
+        }
+    }
+
+    private void savePackageImages(MultipartFile imageFile, String tourId, Set<String> imageIdSet) throws Exception {
+        try {
+            String originalFilename = imageFile.getOriginalFilename();
+            String imagePath = this.imageFolderPath + originalFilename;
+            String fileContentType = imageFile.getContentType();
+            String mimeType = fileContentType.split("/")[1];
+
+            TourImage dayToursImage = TourImage.builder()
+                    .dayToursId(tourId)
+                    .imagePath(imagePath)
+                    .imageName(originalFilename)
+                    .imageType(fileContentType)
+                    .mimeType(mimeType)
+                    .build();
+            imageFile.transferTo(new File(imagePath));
+            String id = this.imageRepository.save(dayToursImage).getId();
+            imageIdSet.add(id);
+
+        } catch (Exception ex) {
+            throw new Exception("Error saving image", ex);
         }
     }
 
@@ -128,19 +138,24 @@ public class DayToursServiceImpl implements DayToursService {
             List<DayTours> daysToursList = this.dayToursRepository.findAll();
 
             for(DayTours dayTour : daysToursList){
+                List<DayToursImageResponseDto> dayToursResponseList = new ArrayList<>();
                 DayToursResponseDto dayToursResponseDto = new DayToursResponseDto();
+                dayToursResponseDto.setId(dayTour.getId());
                 dayToursResponseDto.setName(dayTour.getName());
                 dayToursResponseDto.setDescription(dayTour.getDescription());
                 Set<String> imageIds = dayTour.getImageIds();
 
-                for(String imageId : imageIds){
-                    Optional<TourImage> tourImageOptional = this.imageRepository.findById(imageId);
+                for (String id: imageIds) {
+                    Optional<TourImage> imageById = this.imageRepository.findById(id);
                     DayToursImageResponseDto dayToursImageResponseDto = new DayToursImageResponseDto();
-                    dayToursImageResponseDto.setImageName(tourImageOptional.get().getImageName());
-                    dayToursImageResponseDto.setImagePath(tourImageOptional.get().getImagePath());
-                    dayToursImageResponseDto.setImageData(this.getImageData(tourImageOptional.get().getImagePath()));
-                    dayToursResponseDto.setImageDetails(dayToursImageResponseDto);
+                    dayToursImageResponseDto.setImageName(imageById.get().getImageName());
+                    dayToursImageResponseDto.setImagePath(imageById.get().getImageType());
+                    dayToursImageResponseDto.setMimeType(imageById.get().getMimeType());
+                    dayToursImageResponseDto.setImageData(this.getImageData(imageById.get().getImagePath()));
+                    dayToursResponseList.add(dayToursImageResponseDto);
                 }
+
+                dayToursResponseDto.setImageDetails(dayToursResponseList);
                 dayToursResponseDtoList.add(dayToursResponseDto);
             }
 
@@ -159,6 +174,7 @@ public class DayToursServiceImpl implements DayToursService {
     public DayToursResponseDto findDayTourById(String imageId) throws ResourceNotFoundException{
         logger.info("Finding day tour by id in database");
         try {
+            List<DayToursImageResponseDto> images = new ArrayList<>();
             Optional<DayTours> dayToursOptional = this.dayToursRepository.findById(imageId);
 
             if (dayToursOptional.isEmpty()) {
@@ -169,12 +185,14 @@ public class DayToursServiceImpl implements DayToursService {
             Set<String> imageIds = dayToursOptional.get().getImageIds();
             DayToursResponseDto dayToursResponseDto = this.objectMapper.convertValue(dayToursOptional.get(), DayToursResponseDto.class);
 
-            for(String imageids : imageIds){
-                Optional<TourImage> tourImageOptional = this.imageRepository.findById(imageids);
-                DayToursImageResponseDto dayToursImageResponseDto = this.objectMapper.convertValue(tourImageOptional.get(), DayToursImageResponseDto.class);
-                dayToursImageResponseDto.setImageData(this.getImageData(tourImageOptional.get().getImagePath()));
-                dayToursResponseDto.setImageDetails(dayToursImageResponseDto);
+            for (String tourImageId : imageIds) {
+                Optional<TourImage> imageOptional = this.imageRepository.findById(tourImageId);
+                DayToursImageResponseDto dayToursImageResponseDto = this.objectMapper.convertValue(imageOptional.get(), DayToursImageResponseDto.class);
+                dayToursImageResponseDto.setImageData(this.getImageData(imageOptional.get().getImagePath()));
+                images.add(dayToursImageResponseDto);
             }
+
+            dayToursResponseDto.setImageDetails(images);
 
             return dayToursResponseDto;
         }catch (ResourceNotFoundException e){
@@ -187,6 +205,58 @@ public class DayToursServiceImpl implements DayToursService {
         }
     }
 
+    @Override
+    public void deleteDayToursById(String tourId, AuditLog auditlog) throws ResourceDeleteException {
+        logger.info("Deleting day tour by id in database");
+        auditlog.setLoggedAt(LocalDateTime.now());
+        try{
+            Optional<DayTours> dayToursOptional = this.dayToursRepository.findById(tourId);
+            if (dayToursOptional.isEmpty()) {
+                ResponseCode.DATA_RETRIEVED_ERROR.setReason("Day tour is not available");
+                throw new ResourceDeleteException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            DayTours dayToursToDelete = dayToursOptional.get();
+
+            Set<String> imageIds = dayToursToDelete.getImageIds();
+
+            for (String imageId : imageIds) {
+                Optional<TourImage> imageOptional = this.imageRepository.findById(imageId);
+
+                if(imageOptional.isPresent()) {
+                    File imageFile = new File(imageOptional.get().getImagePath());
+                    if(imageFile.exists()) {
+                        logger.info("Failed to Delete the image Path {}", imageId);
+                    }
+                }
+                this.imageRepository.delete(imageOptional.get());
+            }
+            this.dayToursRepository.delete(dayToursToDelete);
+            logger.info("Package {} successfully deleted", tourId);
+            auditlog.setStatus(AuditLogStatus.SUCCESS);
+        }catch(Exception e){
+            logger.error("error occur when deleting a day tours: {}", e.getMessage());
+            auditlog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(e.getMessage());
+        }finally {
+            auditLogService.save(auditlog);
+        }
+    }
+
+    @Override
+    public byte[] downloadImage(String id) {
+        try {
+            Optional<TourImage> fileData = this.imageRepository.findById(id);
+            String filePath=fileData.get().getImagePath();
+            byte[] images = Files.readAllBytes(new File(filePath).toPath());
+            return images;
+        }catch (Exception ex) {
+            logger.info("");
+        }
+        return null;
+    }
+
+
     private byte[] getImageData(String imagePath) throws Exception {
         try {
             return Files.readAllBytes(new File(imagePath).toPath());
@@ -194,4 +264,6 @@ public class DayToursServiceImpl implements DayToursService {
             throw new Exception(ex);
         }
     }
+
+
 }

@@ -23,12 +23,26 @@ public enum ResponseCode {
     PACKAGE_CREATE_ERROR("Package creation failed", "", null, 0),
     PACKAGE_UPDATED_SUCCESSFULLY("Package updated successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     PACKAGE_UPDATE_ERROR("Package update failed", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    PACKAGE_DELETED_SUCCESSFULLY("Package deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    PACKAGE_DELETE_ERROR("Package deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
     DATA_RETRIEVED_SUCCESS("Data retrieved successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     DATA_RETRIEVED_ERROR("Failed to retrieve data", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
 
     DAY_TOUR_CREATED_SUCCESSFULLY("Day tour created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     DAY_TOUR_CREATE_ERROR("Day tour creation failed", "", null, 0),
+    DAY_TOUR_DELETED_SUCCESSFULLY("Day tour deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    DAY_TOUR_DELETE_ERROR("Day tour deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
+    DESTINATION_CREATED_SUCCESSFULLY("Destination created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    DESTINATION_CREATE_ERROR("Destination creation failed", "", null, 0),
+    DESTINATION_DELETED_SUCCESSFULLY("Destination deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    DESTINATION_DELETE_ERROR("Destination deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
+    TAILOR_MADE_PACKAGE_CREATED_SUCCESSFULLY("Daily made package created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    TAILOR_MADE_PACKAGE_CREATE_ERROR("Daily made package creation failed", "", null, 0),
+    TAILOR_MADE_PACKAGE_DELETED_SUCCESSFULLY("Daily made package deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    TAILOR_MADE_PACKAGE_DELETE_ERROR("Daily made package deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
     RECORD_DOES_NOT_EXIST("No such record found", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
     RECORD_ALREADY_EXISTS("The record already exists", "", HttpStatus.CONFLICT, HttpStatus.CONFLICT.value()),
