@@ -34,11 +34,11 @@ public class TailorMadePackageResponseDto {
 
     private String flexibilityOnDates;
 
-    private List<Map<String, Object>> noOfAdults;
+    private NoOfAdultsDto noOfAdults;
 
-    private List<Map<String, Object>> noOfChildren;
+    private NoOfChildrenDto noOfChildren;
 
-    private List<Map<String, Object>> hotelTypes;
+    private HotelTypesDto hotelTypes;
 
     private List<String> holidayInterest;
 
