@@ -9,6 +9,8 @@ public enum AuditLogAction {
     ADD_NEW_DAY_TOUR,
     ADD_NEW_DESTINATION,
     ADD_NEW_TAILOR_MADE_PACKAGE,
+    ADD_CONTACT,
+
 
     USER_AUTHENTICATE,
 
