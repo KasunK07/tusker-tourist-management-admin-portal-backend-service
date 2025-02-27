@@ -29,7 +29,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TailorMadePackageServiceImpl implements TailorMadePackageService {
 
-    private final static Logger logger = LoggerFactory.getLogger(TailorMadePackageRepository.class);
+    private final static Logger logger = LoggerFactory.getLogger(TailorMadePackageService.class);
 
     private final TailorMadePackageRepository tailorMadePackageRepository;
 

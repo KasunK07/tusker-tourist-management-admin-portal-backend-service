@@ -44,6 +44,11 @@ public enum ResponseCode {
     TAILOR_MADE_PACKAGE_DELETED_SUCCESSFULLY("Tailor made package deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     TAILOR_MADE_PACKAGE_DELETE_ERROR("Tailor made package deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
 
+    CONTACT_CREATED_SUCCESSFULLY("Contact details created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    CONTACT_CREATE_ERROR("Contact details creation failed", "", null, 0),
+    CONTACT_DELETED_SUCCESSFULLY("Contact details deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    CONTACT_DELETE_ERROR("Contact details deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
     RECORD_DOES_NOT_EXIST("No such record found", "", HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value()),
     RECORD_ALREADY_EXISTS("The record already exists", "", HttpStatus.CONFLICT, HttpStatus.CONFLICT.value()),
 

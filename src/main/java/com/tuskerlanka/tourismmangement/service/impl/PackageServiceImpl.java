@@ -93,6 +93,7 @@ public class PackageServiceImpl implements PackageService {
     @Override
     public void updatePackage(String packageId, UpdatePackageDto updatePackageDto, MultipartFile file, AuditLog auditLog) throws ResourceNotFoundException, UpdatePackageException {
         logger.info("entering update package service impl...");
+        // @TODO: in update package add update image
         auditLog.setAction(AuditLogAction.UPDATE_PACKAGE);
         auditLog.setLoggedAt(LocalDateTime.now());
         try {

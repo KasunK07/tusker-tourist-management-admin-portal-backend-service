@@ -3,7 +3,6 @@ package com.tuskerlanka.tourismmangement.controller;
 
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateTailorMadePackageDto;
-import com.tuskerlanka.tourismmangement.dto.DayToursResponseDto;
 import com.tuskerlanka.tourismmangement.dto.TailorMadePackageResponseDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
