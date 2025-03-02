@@ -15,6 +15,9 @@ public record CreateUserDto(
         @NotEmpty(message = "Confirm password is required.")
         String confirmPassword,
 
+        @NotEmpty(message = "phone is required.")
+        String phone,
+
         @NotEmpty(message = "Assign a role to user.")
         String role
 ) {

@@ -19,3 +19,4 @@ public @interface ImageFile {
 
     Class<? extends Payload>[] payload() default {};
 }
+

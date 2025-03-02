@@ -13,4 +13,5 @@ public interface PackageImageRepository extends MongoRepository<PackageImage, St
     void deleteByImageName(String imageName);
 
     Optional<PackageImage> findByImageName(String imageName);
+
 }

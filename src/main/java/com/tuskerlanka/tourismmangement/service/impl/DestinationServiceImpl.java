@@ -40,7 +40,7 @@ public class DestinationServiceImpl implements DestinationService {
 
     private final ObjectMapper objectMapper;
 
-    @Value("${package.image.folder.path}")
+    @Value("${destinations.image.folder.path}")
     private String imageFolderPath;
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -236,5 +236,10 @@ public class DestinationServiceImpl implements DestinationService {
         } catch (Exception ex) {
             throw new Exception(ex);
         }
+    }
+
+    @Override
+    public int getCount(){
+        return (int) destinationRepository.count();
     }
 }

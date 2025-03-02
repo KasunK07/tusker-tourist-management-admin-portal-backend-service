@@ -5,6 +5,7 @@ import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateTailorMadePackageDto;
 import com.tuskerlanka.tourismmangement.dto.TailorMadePackageResponseDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
+import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.TailorMadePackageService;
 import lombok.RequiredArgsConstructor;
@@ -77,6 +78,15 @@ public class TailorMadePackageController {
         this.tailorMadePackageService.deleteTailorMadePackage(tailorMadeId,auditLog);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.TAILOR_MADE_PACKAGE_DELETED_SUCCESSFULLY));
+    }
+
+    @GetMapping(path = "/get/count")
+    public ResponseEntity<ApiResponse> getCount() throws BaseException {
+        logger.info("entering get package api end point...");
+
+        int count = tailorMadePackageService.getCount();
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, count));
     }
 
 }

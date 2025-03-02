@@ -3,19 +3,16 @@ package com.tuskerlanka.tourismmangement.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.document.DayTours;
-import com.tuskerlanka.tourismmangement.document.PackageImage;
 import com.tuskerlanka.tourismmangement.document.TourImage;
 import com.tuskerlanka.tourismmangement.dto.*;
 import com.tuskerlanka.tourismmangement.enums.AuditLogAction;
 import com.tuskerlanka.tourismmangement.enums.AuditLogStatus;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
-import com.tuskerlanka.tourismmangement.exception.BaseException;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
 import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
 import com.tuskerlanka.tourismmangement.repository.DayToursImageRepository;
 import com.tuskerlanka.tourismmangement.repository.DayToursRepository;
-import com.tuskerlanka.tourismmangement.repository.PackageRepository;
 import com.tuskerlanka.tourismmangement.service.DayToursService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -45,7 +42,7 @@ public class DayToursServiceImpl implements DayToursService {
 
     private final ObjectMapper objectMapper;
 
-    @Value("${package.image.folder.path}")
+    @Value("${dayTours.image.folder.path}")
     private String imageFolderPath;
 
 
@@ -265,5 +262,9 @@ public class DayToursServiceImpl implements DayToursService {
         }
     }
 
+    @Override
+    public int getCount(){
+        return (int) dayToursRepository.count();
+    }
 
 }

@@ -21,4 +21,6 @@ public interface TailorMadePackageService {
     TailorMadePackageResponseDto findAllById(String tailorMadeId) throws ResourceNotFoundException;
 
     void deleteTailorMadePackage(String tailorMadeId, AuditLog auditLog) throws ResourceDeleteException;
+
+    int getCount();
 }

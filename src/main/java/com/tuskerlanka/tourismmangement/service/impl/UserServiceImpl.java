@@ -6,6 +6,7 @@ import com.tuskerlanka.tourismmangement.document.Token;
 import com.tuskerlanka.tourismmangement.document.User;
 import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
 import com.tuskerlanka.tourismmangement.dto.user.CreateUserDto;
+import com.tuskerlanka.tourismmangement.dto.user.UpdateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UserDto;
 import com.tuskerlanka.tourismmangement.enums.AuditLogAction;
 import com.tuskerlanka.tourismmangement.enums.AuditLogStatus;
@@ -116,6 +117,7 @@ public class UserServiceImpl implements UserService {
                     .isEnabled(true)
                     .password(this.passwordEncoder.encode(createUserDto.password()))
                     .role(createUserDto.role())
+                    .phone(createUserDto.phone())
                     .build();
 
             this.userRepository.save(user);
@@ -137,8 +139,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser() {
+    public void updateUser(String email, UpdateUserDto updateUserDto, AuditLog auditLog) throws ResourceNotFoundException,UpdateUserDetailsException {
+        logger.info("entering update user service impl...");
+        auditLog.setLoggedAt(LocalDateTime.now());
+        auditLog.setAction(AuditLogAction.UPDATE_USER);
 
+        try{
+
+            Optional<User> userOptional = this.userRepository.findByEmail(email);
+
+            if(userOptional.isEmpty()){
+                logger.error("user not found");
+                throw new UpdateUserDetailsException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            userOptional.get().setEmail(updateUserDto.getEmail());
+            if(updateUserDto.getPassword() == null){
+                userOptional.get().setPassword(this.passwordEncoder.encode(userOptional.get().getPassword()));
+            }
+            else{
+                userOptional.get().setPassword(this.passwordEncoder.encode(updateUserDto.getPassword()));
+            }
+            userOptional.get().setRole(updateUserDto.getRole());
+            userOptional.get().setPhone(updateUserDto.getPhone());
+
+            this.userRepository.save(userOptional.get());
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+        }catch (ResourceNotFoundException ex){
+            logger.error("error occur when updating user details: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new ResourceNotFoundException(ex.getResponseCode());
+        }catch (Exception ex){
+            logger.error("unknown error occur when updating a package: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new UpdateUserDetailsException(ResponseCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override
@@ -190,6 +226,29 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public void deleteUser(String email, AuditLog auditLog) throws DeleteUserException{
+        logger.info("entering deleteUser service impl..");
+        auditLog.setLoggedAt(LocalDateTime.now());
+        auditLog.setAction(AuditLogAction.DELETE_USER);
+        try{
+            Optional<User> userOptional = this.userRepository.findByEmail(email);
+            if(userOptional.isEmpty()){
+                logger.error("user not found");
+                throw new DeleteUserException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            this.userRepository.delete(userOptional.get());
+        }catch (Exception ex){
+            logger.error("error occur when deleting a user: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+        }finally {
+            this.auditLogService.save(auditLog);
+        }
+
+    }
+
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
@@ -230,7 +289,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    private void saveRefreshToken(String refreshToken) throws Exception {
+    protected void saveRefreshToken(String refreshToken) throws Exception {
         try {
             String jti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti", String.class));
             Date expirationDateTime = this.jwtUtil.extractClaim(refreshToken, Claims::getExpiration);

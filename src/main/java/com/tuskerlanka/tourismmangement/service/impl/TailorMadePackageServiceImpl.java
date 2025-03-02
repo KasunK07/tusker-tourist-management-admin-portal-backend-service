@@ -139,4 +139,9 @@ public class TailorMadePackageServiceImpl implements TailorMadePackageService {
             this.auditLogService.save(auditLog);
         }
     }
+
+    @Override
+    public int getCount(){
+        return (int) tailorMadePackageRepository.count();
+    }
 }
