@@ -15,6 +15,8 @@ public enum AuditLogAction {
     USER_AUTHENTICATE,
 
     CREATE_USER,
+    UPDATE_USER,
+    DELETE_USER,
 
     AUTHENTICATE_USER,
 

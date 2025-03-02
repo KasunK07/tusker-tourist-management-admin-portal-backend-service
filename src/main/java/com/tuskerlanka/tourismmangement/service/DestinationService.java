@@ -23,4 +23,6 @@ public interface DestinationService {
     void deleteDestinationsById(String destinationId, AuditLog auditlog) throws ResourceDeleteException;
 
     byte[] downloadImage(String id);
+
+    int getCount();
 }

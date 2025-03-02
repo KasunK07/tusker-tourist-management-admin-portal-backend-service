@@ -91,26 +91,46 @@ public class PackageServiceImpl implements PackageService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public void updatePackage(String packageId, UpdatePackageDto updatePackageDto, MultipartFile file, AuditLog auditLog) throws ResourceNotFoundException, UpdatePackageException {
+    public void updatePackage(String packageId, UpdatePackageDto updatePackageDto, MultipartFile[] files, AuditLog auditLog)
+            throws ResourceNotFoundException, UpdatePackageException {
         logger.info("entering update package service impl...");
-        // @TODO: in update package add update image
         auditLog.setAction(AuditLogAction.UPDATE_PACKAGE);
         auditLog.setLoggedAt(LocalDateTime.now());
+
         try {
             Optional<Package> packageOptional = this.packageRepository.findById(packageId);
 
             if (packageOptional.isEmpty()) {
                 ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Package is not available");
+                auditLog.setStatus(AuditLogStatus.FAILED);
                 throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
             }
 
-            packageOptional.get().setName(updatePackageDto.getName());
-            packageOptional.get().setDescription(updatePackageDto.getDescription());
-            packageOptional.get().setPrice(updatePackageDto.getPrice());
-            packageOptional.get().setStatus(updatePackageDto.getStatus());
-            packageOptional.get().setUpdatedAt(LocalDateTime.now());
+            Package existingPackage = packageOptional.get();
+            existingPackage.setName(updatePackageDto.getName());
+            existingPackage.setDescription(updatePackageDto.getDescription());
+            existingPackage.setPrice(updatePackageDto.getPrice());
+            existingPackage.setHighlights(updatePackageDto.getHighlights());
+            existingPackage.setUpdatedAt(LocalDateTime.now());
 
-            this.packageRepository.save(packageOptional.get());
+            Set<String> newItineraryIds = new HashSet<>();
+            if (updatePackageDto.getItineraryDetails() != null && !updatePackageDto.getItineraryDetails().isEmpty()) {
+                Set<String> oldItineraryIds = existingPackage.getItineraryIds();
+                for (String itineraryId : oldItineraryIds) {
+                    packageItineraryRepository.deleteById(itineraryId);
+                }
+                saveItineraryDetails(updatePackageDto.getItineraryDetails(), packageId, newItineraryIds);
+                existingPackage.setItineraryIds(newItineraryIds);
+            }
+
+            Set<String> newImageIds = new HashSet<>();
+            if (files != null && files.length > 0) {
+                savePackageImages(files, packageId, newImageIds);
+                existingPackage.setImageIds(newImageIds);
+            }
+            packageRepository.save(existingPackage);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+            logger.info("Package {} successfully updated", packageId);
 
         } catch (ResourceNotFoundException ex) {
             logger.error("error occur when updating a package: {}", ex.getResponseCode());
@@ -121,6 +141,8 @@ public class PackageServiceImpl implements PackageService {
             auditLog.setStatus(AuditLogStatus.FAILED);
             ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
             throw new UpdatePackageException(ResponseCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            this.auditLogService.save(auditLog);
         }
     }
 
@@ -232,7 +254,7 @@ public class PackageServiceImpl implements PackageService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public void removePackageImageByImageName(String packageId, String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException  {
+    public void removePackageImageByImageName(String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException  {
         logger.info("entering removePackageImageByImageName service impl...");
         auditLog.setAction(AuditLogAction.DELETE_PACKAGE_IMAGE);
         auditLog.setLoggedAt(LocalDateTime.now());
@@ -244,8 +266,19 @@ public class PackageServiceImpl implements PackageService {
                 ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Package image is not available");
                 throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
             }
-            this.packageImageRepository.delete(packageImageOptional.get());
+            String imagePath = packageImageOptional.get().getImagePath();
+
+            boolean isFileDeleted = new File(imagePath).delete();
+
+            if(isFileDeleted){
+                this.packageImageRepository.delete(packageImageOptional.get());
+            }else {
+                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Image Path Doesn't exists");
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
             logger.info("image {} successfully removed from the db", imageName);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
         } catch (ResourceNotFoundException ex) {
             logger.error("error occur when updating a package: {}", ex.getResponseCode());
             auditLog.setStatus(AuditLogStatus.FAILED);
@@ -365,5 +398,10 @@ public class PackageServiceImpl implements PackageService {
         } catch (Exception ex) {
             throw new Exception(ex);
         }
+    }
+
+    @Override
+    public int getCount(){
+        return (int) packageRepository.count();
     }
 }

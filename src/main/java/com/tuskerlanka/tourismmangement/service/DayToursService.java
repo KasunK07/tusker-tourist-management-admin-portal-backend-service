@@ -21,4 +21,6 @@ public interface DayToursService {
     void deleteDayToursById(String tourId, AuditLog auditLog) throws BaseException;
 
     byte[] downloadImage(String id);
+
+    int getCount();
 }

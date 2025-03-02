@@ -15,6 +15,11 @@ public enum ResponseCode {
 
     CREATE_USER_SUCCESS("User created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     CREATE_USER_ERROR("User creation failed", "", null, 0),
+    USER_UPDATED_SUCCESSFULLY("User updated successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    USER_UPDATE_ERROR("User update failed", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    USER_DELETED_SUCCESSFULLY("User deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
+    USER_DELETE_ERROR("User deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+
 
     AUTHENTICATION_SUCCESS("User successfully authenticated", "", HttpStatus.OK, HttpStatus.NO_CONTENT.value()),
     AUTHENTICATION_ERROR("Unsuccessful authentication", HttpStatus.UNAUTHORIZED.getReasonPhrase(), HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.value() ),

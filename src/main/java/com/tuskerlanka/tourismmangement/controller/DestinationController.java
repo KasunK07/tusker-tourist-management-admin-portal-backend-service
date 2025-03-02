@@ -84,4 +84,13 @@ public class DestinationController {
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DESTINATION_DELETED_SUCCESSFULLY));
     }
+
+    @GetMapping(path = "/get/count")
+    public ResponseEntity<ApiResponse> getCount() throws BaseException {
+        logger.info("entering get package api end point...");
+
+        int count = destinationService.getCount();
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, count));
+    }
 }

@@ -22,6 +22,8 @@ public class User extends BaseDocument {
 
     private String role;
 
+    private String phone;
+
     @Field(name = "is_enabled")
     private boolean isEnabled;
 

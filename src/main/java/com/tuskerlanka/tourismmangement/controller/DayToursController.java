@@ -86,4 +86,13 @@ public class DayToursController {
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DAY_TOUR_DELETED_SUCCESSFULLY));
     }
+
+    @GetMapping(path = "/get/count")
+    public ResponseEntity<ApiResponse> getCount() throws BaseException {
+        logger.info("entering get package api end point...");
+
+        int count = dayToursService.getCount();
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, count));
+    }
 }
