@@ -24,5 +24,7 @@ public interface UserService {
 
     void deleteUser(String email,AuditLog auditLog) throws DeleteUserException;
 
-    void logoutUser(String refreshToken, AuditLog auditLog);
+    void logoutUser(String refreshToken, AuditLog auditLog) throws InvalidTokenException;
+
+    String renewAccessToken(String refreshToken, AuditLog auditLog) throws InvalidTokenException;
 }

@@ -26,6 +26,9 @@ public class Token {
 
     private boolean revoked = false;
 
+    @Field(name = "user_id")
+    private String userId;
+
     public void revoke() {
         this.revoked = true;
     }

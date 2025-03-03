@@ -1,0 +1,23 @@
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+  data:
+    mongodb:
+      uri: # add production database uri
+      database: # add product database
+
+package:
+  image:
+    folder:
+      path: # Change this to prod path
+
+dayTours:
+  image:
+    folder:
+      path: # Change this to prod path
+
+destinations:
+  image:
+    folder:
+      path: # Change this to prod path

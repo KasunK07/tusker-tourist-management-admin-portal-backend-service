@@ -73,7 +73,9 @@ public class UserServiceImpl implements UserService {
                 String accessToken = this.jwtUtil.generateAccessToken(username, roles);
                 String refreshToken = jwtUtil.generateRefreshToken(username);
 
-                this.saveRefreshToken(refreshToken);
+                String userId = this.userRepository.findByEmail(username).get().getId();
+
+                this.saveRefreshToken(refreshToken, userId);
 
                 tokenMap.put("access_token", accessToken);
                 tokenMap.put("refresh_token", refreshToken);
@@ -117,7 +119,6 @@ public class UserServiceImpl implements UserService {
                     .isEnabled(true)
                     .password(this.passwordEncoder.encode(createUserDto.password()))
                     .role(createUserDto.role())
-                    .phone(createUserDto.phone())
                     .build();
 
             this.userRepository.save(user);
@@ -288,8 +289,60 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public String renewAccessToken(String refreshToken, AuditLog auditLog) throws InvalidTokenException {
+        logger.info("entering renew access token service impl...");
+
+        auditLog.setLoggedAt(auditLog.getLoggedAt());
+        auditLog.setAction(AuditLogAction.RENEW_USER_ACCESS_TOKEN);
+        try {
+            String jti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti").toString());
+            String username = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("username").toString());
+            Date expirationDate = this.jwtUtil.extractClaim(refreshToken, Claims::getExpiration);
+
+            if (expirationDate.before(new Date())) {
+                throw new InvalidTokenException(ResponseCode.INVALID_TOKEN);
+            }
+
+            Optional<Token> tokenOptional = this.tokenRepository.findByJti(jti);
+
+            if (tokenOptional.isPresent()) {
+                throw new InvalidTokenException(ResponseCode.INVALID_TOKEN);
+            }
+
+            Token refreshTokenDoc = tokenOptional.get();
+
+            if (refreshTokenDoc.getExpiryDate().before(expirationDate) || refreshTokenDoc.isRevoked()) {
+                throw new InvalidTokenException(ResponseCode.INVALID_TOKEN);
+            }
+
+            String userId = refreshTokenDoc.getUserId();
+
+            Optional<User> userOptional = this.userRepository.findById(userId);
+
+            if (userOptional.isEmpty()) {
+                throw new InvalidTokenException(ResponseCode.INVALID_TOKEN);
+            }
+
+            String userRole = userOptional.get().getRole();
+
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+
+            return this.jwtUtil.generateAccessToken(username, List.of(userRole));
+        } catch (InvalidTokenException ex) {
+            logger.error("error occur when renewing access token: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new InvalidTokenException(ex.getResponseCode());
+        } catch (Exception ex) {
+            logger.error("unknown error occur when renewing access token: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new InvalidTokenException(ResponseCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @Transactional(propagation = Propagation.MANDATORY)
-    protected void saveRefreshToken(String refreshToken) throws Exception {
+    private void saveRefreshToken(String refreshToken, String userId) throws Exception {
         try {
             String jti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti", String.class));
             Date expirationDateTime = this.jwtUtil.extractClaim(refreshToken, Claims::getExpiration);
@@ -297,6 +350,7 @@ public class UserServiceImpl implements UserService {
                     .jti(jti)
                     .expiryDate(expirationDateTime)
                     .revoked(false)
+                    .userId(userId)
                     .build();
             this.tokenRepository.save(saveRefreshToken);
             logger.info("refresh token successfully saved in the db");

@@ -7,10 +7,7 @@ import com.tuskerlanka.tourismmangement.dto.user.CreateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UpdateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UserDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
-import com.tuskerlanka.tourismmangement.exception.AuthenticationException;
-import com.tuskerlanka.tourismmangement.exception.CreateUserException;
-import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
-import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
+import com.tuskerlanka.tourismmangement.exception.*;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.UserService;
 import jakarta.validation.Valid;
@@ -48,7 +45,7 @@ public class UserController {
         AuditLog auditLog = new AuditLog();
         auditLog.setEndPoint(END_POINT+"/sign-in");
         auditLog.setMethod("POST");
-        auditLog.setUsername(ApplicationConstants.USER_SYSTEM);
+        auditLog.setUsername(USER_SYSTEM);
 
         Map<String, String> tokenMap = this.userService.signInUser(authenticationDto, auditLog);
 
@@ -62,8 +59,8 @@ public class UserController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", tokenMap.get("refresh_token"))
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("String") // @TODO: Set to true in production (HTTPS required)
+                .secure(false)  // @TODO: Set to true in production (HTTPS required)
+                .sameSite("String")
                 .path("/")
                 .maxAge(ApplicationConstants.TokenMap.REFRESH_TOKEN_EXPIRY)
                 .build();
@@ -82,7 +79,7 @@ public class UserController {
         AuditLog auditLog = new AuditLog();
         auditLog.setEndPoint(END_POINT+"/save");
         auditLog.setMethod("POST");
-        auditLog.setUsername(ApplicationConstants.USER_SYSTEM);
+        auditLog.setUsername(USER_SYSTEM);
 
         this.userService.createUser(createUserDto, auditLog);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.getInstance(ResponseCode.CREATE_USER_SUCCESS));
@@ -137,7 +134,7 @@ public class UserController {
         AuditLog auditLog = new AuditLog();
         auditLog.setEndPoint(END_POINT+"/logout");
         auditLog.setMethod("POST");
-        auditLog.setUsername(ApplicationConstants.USER_SYSTEM);
+        auditLog.setUsername(USER_SYSTEM);
 
         this.userService.logoutUser(refreshToken, auditLog);
 
@@ -151,6 +148,30 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
+    }
+
+
+    @PostMapping(path = "/token/refresh")
+    public ResponseEntity<?> renewAccessToken(@CookieValue(name = "refresh_token", required = false) String refreshToken) throws InvalidTokenException {
+        logger.info("entering token token refresh API end point...");
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setEndPoint(END_POINT+"/token/refresh");
+        auditLog.setMethod("POST");
+        auditLog.setUsername(USER_SYSTEM);
+
+        ResponseCookie accessCookie = ResponseCookie.from("access_token", this.userService.renewAccessToken(refreshToken, auditLog))
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("String")
+                .path("/")
+                .maxAge(ApplicationConstants.TokenMap.ACCESS_TOKEN_EXPIRY)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .build();
     }
 }
