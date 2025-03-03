@@ -38,11 +38,17 @@ public enum ResponseCode {
     DAY_TOUR_CREATE_ERROR("Day tour creation failed", "", null, 0),
     DAY_TOUR_DELETED_SUCCESSFULLY("Day tour deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     DAY_TOUR_DELETE_ERROR("Day tour deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+    DAY_TOUR_UPDATED_SUCCESSFULLY("Day tour updated successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    DAY_TOUR_UPDATE_ERROR("Day tour update failed", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
 
     DESTINATION_CREATED_SUCCESSFULLY("Destination created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     DESTINATION_CREATE_ERROR("Destination creation failed", "", null, 0),
     DESTINATION_DELETED_SUCCESSFULLY("Destination deleted successfully", "", HttpStatus.OK, HttpStatus.OK.value()),
     DESTINATION_DELETE_ERROR("Destination deletion failed", "", HttpStatus.OK, HttpStatus.OK.value()),
+    DESTINATION_UPDATED_SUCCESSFULLY("Destination updated successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+    DESTINATION_UPDATE_ERROR("Destination update failed", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
+
+
 
     TAILOR_MADE_PACKAGE_CREATED_SUCCESSFULLY("Tailor made package created successfully", "", HttpStatus.CREATED, HttpStatus.CREATED.value()),
     TAILOR_MADE_PACKAGE_CREATE_ERROR("Tailor made package creation failed", "", null, 0),

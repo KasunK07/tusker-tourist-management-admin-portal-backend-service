@@ -9,6 +9,7 @@ import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.exception.CreateDestinationException;
 import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
+import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
 import com.tuskerlanka.tourismmangement.repository.*;
 import com.tuskerlanka.tourismmangement.service.DestinationService;
 import lombok.RequiredArgsConstructor;
@@ -99,6 +100,53 @@ public class DestinationServiceImpl implements DestinationService {
 
         } catch (Exception ex) {
             throw new Exception("Error saving image", ex);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Override
+    public void updateDestinations(String destinationId, UpdateDestinationsDto updateDestinationsDto, MultipartFile file, AuditLog auditLog)
+            throws ResourceNotFoundException, UpdatePackageException {
+        logger.info("entering update destinations service impl...");
+        auditLog.setAction(AuditLogAction.UPDATE_DESTINATION);
+        auditLog.setLoggedAt(LocalDateTime.now());
+
+        try {
+            Optional<Destinations> destinationsOptional = this.destinationRepository.findById(destinationId);
+
+            if (destinationsOptional.isEmpty()) {
+                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Destination is not available");
+                auditLog.setStatus(AuditLogStatus.FAILED);
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            Destinations existingDestinations = destinationsOptional.get();
+            existingDestinations.setName(updateDestinationsDto.getName());
+            existingDestinations.setDescription(updateDestinationsDto.getDescription());
+
+            if (file != null) {
+                Set<String> newImageIds = new HashSet<>();
+                saveDestinationImages(file, destinationId, newImageIds);
+                Set<String> currentImageIds = existingDestinations.getImageIds() != null ? existingDestinations.getImageIds() : new HashSet<>();
+                currentImageIds.addAll(newImageIds);
+                existingDestinations.setImageIds(currentImageIds);
+            }
+
+            destinationRepository.save(existingDestinations);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+            logger.info("Destinations {} successfully updated", destinationId);
+
+        } catch (ResourceNotFoundException ex) {
+            logger.error("error occur when updating a destination: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new ResourceNotFoundException(ex.getResponseCode());
+        } catch (Exception ex) {
+            logger.error("unknown error occur when updating a destination: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new UpdatePackageException(ResponseCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            this.auditLogService.save(auditLog);
         }
     }
 
@@ -235,6 +283,74 @@ public class DestinationServiceImpl implements DestinationService {
             return Files.readAllBytes(new File(imagePath).toPath());
         } catch (Exception ex) {
             throw new Exception(ex);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Override
+    public void removePackageImageByImageName(String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException {
+        logger.info("Entering removeDayToursImageByImageName service impl...");
+        auditLog.setAction(AuditLogAction.DELETE_DESTINATION_IMAGE);
+        auditLog.setLoggedAt(LocalDateTime.now());
+
+        try {
+            Optional<DestinationImage> dayDestinationOptional = this.imageRepository.findByImageName(imageName);
+
+            if (dayDestinationOptional.isEmpty()) {
+                logger.warn("Destination image with name {} not found", imageName);
+                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Destination image is not available");
+                auditLog.setStatus(AuditLogStatus.FAILED);
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            DestinationImage destinationImage = dayDestinationOptional.get();
+            String imageId = destinationImage.getId();
+            String imagePath = destinationImage.getImagePath();
+
+            List<Destinations> destinationsUsingImage = destinationRepository.findByImageIdsContaining(imageId);
+            boolean isUsedByOtherDestinations = destinationsUsingImage.size() > 1;
+
+            imageRepository.delete(destinationImage);
+            logger.info("Image {} removed from DestinationImage collection", imageName);
+            for (Destinations destinations : destinationsUsingImage) {
+                Set<String> imageIds = destinations.getImageIds();
+                if (imageIds.remove(imageId)) {
+                    destinationRepository.save(destinations);
+                    logger.info("Removed imageId {} from destinations {}", imageId, destinations.getId());
+                }
+            }
+            if (!isUsedByOtherDestinations) {
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    if (imageFile.delete()) {
+                        logger.info("Deleted image file: {}", imagePath);
+                    } else {
+                        logger.warn("Failed to delete image file: {}", imagePath);
+                        ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Image Path Doesn't exists");
+                        auditLog.setStatus(AuditLogStatus.FAILED);
+                        throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+                    }
+                } else {
+                    logger.warn("Image file does not exist at path: {}", imagePath);
+                }
+            } else {
+                logger.info("Image {} is used by other destinations, keeping it in filesystem", imageName);
+            }
+
+            logger.info("Image {} successfully removed from the db and related destinations", imageName);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+
+        } catch (ResourceNotFoundException ex) {
+            logger.error("Error occurred when removing destinations image: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new ResourceNotFoundException(ex.getResponseCode());
+        } catch (Exception ex) {
+            logger.error("Unknown error occurred when removing a destinations image: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new ResourceDeleteException(ResponseCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            this.auditLogService.save(auditLog);
         }
     }
 
