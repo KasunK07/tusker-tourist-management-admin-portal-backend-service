@@ -1,7 +1,7 @@
 package com.tuskerlanka.tourismmangement.service.impl;
 
 import com.tuskerlanka.tourismmangement.document.Token;
-import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
+import com.tuskerlanka.tourismmangement.dto.user.AuthenticationDto;
 import com.tuskerlanka.tourismmangement.repository.TokenRepository;
 import com.tuskerlanka.tourismmangement.service.AuthenticationService;
 import com.tuskerlanka.tourismmangement.util.JwtUtil;
@@ -39,14 +39,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         logger.info("entering login service impl..");
 
         Map<String, String> tokenMap = new HashMap<>();
-        final String username = authenticationDto.username();;
+        final String username = authenticationDto.email();;
 
         Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(username, authenticationDto.password(), null);
         Authentication authenticateResponse = authenticationManager.authenticate(authentication);
 
         if (authenticateResponse != null && authenticateResponse.isAuthenticated()) {
             final String authorities = authenticateResponse.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
-            // final String accessToken = this.jwtUtil.generateAccessToken(username, authorities);
+            // final String accessToken = this.jwtUtil.generateAccessToken(email, authorities);
             final String refreshToken = this.jwtUtil.generateRefreshToken(username);
             
             this.saveRefreshToken(refreshToken);
@@ -56,7 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             return tokenMap;
         } else {
-            throw new BadCredentialsException("Invalid username or password");
+            throw new BadCredentialsException("Invalid email or password");
         }
     }
 

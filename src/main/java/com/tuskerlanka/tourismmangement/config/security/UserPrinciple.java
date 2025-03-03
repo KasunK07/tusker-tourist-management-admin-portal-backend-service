@@ -2,10 +2,12 @@ package com.tuskerlanka.tourismmangement.config.security;
 
 import com.tuskerlanka.tourismmangement.document.User;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class UserPrinciple implements UserDetails {
 
@@ -17,7 +19,10 @@ public class UserPrinciple implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new ArrayList<>();
+        String userRole = this.user.getRole();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(userRole));
+        return authorities;
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.document.Token;
 import com.tuskerlanka.tourismmangement.document.User;
-import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
+import com.tuskerlanka.tourismmangement.dto.user.AuthenticationDto;
 import com.tuskerlanka.tourismmangement.dto.user.CreateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UpdateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UserDto;
@@ -24,6 +24,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -62,7 +63,7 @@ public class UserServiceImpl implements UserService {
         try {
             Map<String, String> tokenMap = new HashMap<>();
 
-            final String username = authenticationDto.username();
+            final String username = authenticationDto.email();
             final String rawPassword = authenticationDto.password();
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, rawPassword, null);
@@ -86,6 +87,11 @@ public class UserServiceImpl implements UserService {
             } else {
                 throw new AuthenticationException(ResponseCode.AUTHENTICATION_ERROR);
             }
+        } catch (UsernameNotFoundException ex) {
+            logger.error("error occur when user trying authenticate: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.AUTHENTICATION_ERROR.setReason(ex.getMessage());
+            throw new AuthenticationException(ResponseCode.AUTHENTICATION_ERROR);
         } catch (AuthenticationException ex) {
             logger.error("error occur when user trying authenticate: {}", ex.getResponseCode());
             auditLog.setStatus(AuditLogStatus.FAILED);
@@ -297,7 +303,7 @@ public class UserServiceImpl implements UserService {
         auditLog.setAction(AuditLogAction.RENEW_USER_ACCESS_TOKEN);
         try {
             String jti = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("jti").toString());
-            String username = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("username").toString());
+            String username = this.jwtUtil.extractClaim(refreshToken, claims -> claims.get("email").toString());
             Date expirationDate = this.jwtUtil.extractClaim(refreshToken, Claims::getExpiration);
 
             if (expirationDate.before(new Date())) {

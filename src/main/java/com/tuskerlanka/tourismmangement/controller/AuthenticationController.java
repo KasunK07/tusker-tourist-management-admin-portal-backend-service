@@ -1,6 +1,6 @@
 package com.tuskerlanka.tourismmangement.controller;
 
-import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
+import com.tuskerlanka.tourismmangement.dto.user.AuthenticationDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.AuthenticationService;

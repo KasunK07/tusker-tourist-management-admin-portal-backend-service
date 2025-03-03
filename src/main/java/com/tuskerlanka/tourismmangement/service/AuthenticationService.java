@@ -1,6 +1,6 @@
 package com.tuskerlanka.tourismmangement.service;
 
-import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
+import com.tuskerlanka.tourismmangement.dto.user.AuthenticationDto;
 
 import java.util.Map;
 

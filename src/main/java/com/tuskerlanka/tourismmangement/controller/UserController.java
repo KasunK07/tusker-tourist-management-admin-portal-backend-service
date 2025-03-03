@@ -2,7 +2,7 @@ package com.tuskerlanka.tourismmangement.controller;
 
 import com.tuskerlanka.tourismmangement.constants.ApplicationConstants;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
-import com.tuskerlanka.tourismmangement.dto.AuthenticationDto;
+import com.tuskerlanka.tourismmangement.dto.user.AuthenticationDto;
 import com.tuskerlanka.tourismmangement.dto.user.CreateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UpdateUserDto;
 import com.tuskerlanka.tourismmangement.dto.user.UserDto;
@@ -28,7 +28,6 @@ import static com.tuskerlanka.tourismmangement.constants.ApplicationConstants.US
 @RestController
 @RequestMapping(path = "/api/v1/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UserController {
 
     private final static Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -66,10 +65,10 @@ public class UserController {
                 .build();
 
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+        return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .build();
+                .body(ApiResponse.getInstance(ResponseCode.AUTHENTICATION_SUCCESS, tokenMap.get("access_token")));
     }
 
     @PostMapping(path = "/save")
