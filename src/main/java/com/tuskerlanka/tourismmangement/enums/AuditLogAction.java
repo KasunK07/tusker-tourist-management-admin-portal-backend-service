@@ -26,5 +26,7 @@ public enum AuditLogAction {
 
     USER_LOGOUT,
 
-    DISABLE_USER
+    DISABLE_USER,
+
+    RENEW_USER_ACCESS_TOKEN
 }
