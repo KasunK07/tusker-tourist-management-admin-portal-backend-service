@@ -1,10 +1,7 @@
 package com.tuskerlanka.tourismmangement.exception.global;
 
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
-import com.tuskerlanka.tourismmangement.exception.CreatePackageException;
-import com.tuskerlanka.tourismmangement.exception.CreateUserException;
-import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
-import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
+import com.tuskerlanka.tourismmangement.exception.*;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -58,21 +55,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
     }
 
-
     @ExceptionHandler(CreateUserException.class)
     public ResponseEntity<ApiResponse> handleCreateUserException(CreateUserException ex) {
         LOGGER.error("error occur in handleResourceNotFoundException: {}", ex.getResponseCode());
         return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
     }
 
-    @ExceptionHandler(UpdatePackageException.class)
-    public ResponseEntity<ApiResponse> handleResourceNotFoundException(UpdatePackageException ex) {
-        LOGGER.error("error occur in handleResourceNotFoundException: {}", ex.getResponseCode());
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse> handleAuthenticationException(AuthenticationException ex) {
+        LOGGER.error("error occur in handleAuthenticationException: {}", ex.getResponseCode());
         return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    @ExceptionHandler(UpdatePackageException.class)
+    public ResponseEntity<ApiResponse> handleResourceNotFoundException(UpdatePackageException ex) {
         LOGGER.error("error occur in handleResourceNotFoundException: {}", ex.getResponseCode());
         return ResponseEntity.status(ex.getResponseCode().getHttpStatus()).body(ApiResponse.getInstance(ex.getResponseCode(), null));
     }
