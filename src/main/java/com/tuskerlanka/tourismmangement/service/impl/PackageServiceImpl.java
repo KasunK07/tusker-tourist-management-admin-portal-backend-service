@@ -123,11 +123,14 @@ public class PackageServiceImpl implements PackageService {
                 existingPackage.setItineraryIds(newItineraryIds);
             }
 
-            Set<String> newImageIds = new HashSet<>();
             if (files != null && files.length > 0) {
+                Set<String> newImageIds = new HashSet<>();
                 savePackageImages(files, packageId, newImageIds);
-                existingPackage.setImageIds(newImageIds);
+                Set<String> currentImageIds = existingPackage.getImageIds() != null ? existingPackage.getImageIds() : new HashSet<>();
+                currentImageIds.addAll(newImageIds);
+                existingPackage.setImageIds(currentImageIds);
             }
+
             packageRepository.save(existingPackage);
             auditLog.setStatus(AuditLogStatus.SUCCESS);
             logger.info("Package {} successfully updated", packageId);
@@ -254,37 +257,64 @@ public class PackageServiceImpl implements PackageService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public void removePackageImageByImageName(String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException  {
-        logger.info("entering removePackageImageByImageName service impl...");
+    public void removePackageImageByImageName(String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException {
+        logger.info("Entering removePackageImageByImageName service impl...");
         auditLog.setAction(AuditLogAction.DELETE_PACKAGE_IMAGE);
         auditLog.setLoggedAt(LocalDateTime.now());
-        try {
 
+        try {
             Optional<PackageImage> packageImageOptional = this.packageImageRepository.findByImageName(imageName);
 
             if (packageImageOptional.isEmpty()) {
+                logger.warn("Package image with name {} not found", imageName);
                 ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Package image is not available");
-                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
-            }
-            String imagePath = packageImageOptional.get().getImagePath();
-
-            boolean isFileDeleted = new File(imagePath).delete();
-
-            if(isFileDeleted){
-                this.packageImageRepository.delete(packageImageOptional.get());
-            }else {
-                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Image Path Doesn't exists");
+                auditLog.setStatus(AuditLogStatus.FAILED);
                 throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
             }
 
-            logger.info("image {} successfully removed from the db", imageName);
+            PackageImage packageImage = packageImageOptional.get();
+            String imageId = packageImage.getId();
+            String imagePath = packageImage.getImagePath();
+
+            List<Package> packagesUsingImage = packageRepository.findByImageIdsContaining(imageId);
+            boolean isUsedByOtherPackages = packagesUsingImage.size() > 1;
+
+            packageImageRepository.delete(packageImage);
+            logger.info("Image {} removed from PackageImage collection", imageName);
+            for (Package pkg : packagesUsingImage) {
+                Set<String> imageIds = pkg.getImageIds();
+                if (imageIds.remove(imageId)) {
+                    packageRepository.save(pkg);
+                    logger.info("Removed imageId {} from package {}", imageId, pkg.getId());
+                }
+            }
+            if (!isUsedByOtherPackages) {
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    if (imageFile.delete()) {
+                        logger.info("Deleted image file: {}", imagePath);
+                    } else {
+                        logger.warn("Failed to delete image file: {}", imagePath);
+                        ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Image Path Doesn't exists");
+                        auditLog.setStatus(AuditLogStatus.FAILED);
+                        throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+                    }
+                } else {
+                    logger.warn("Image file does not exist at path: {}", imagePath);
+                }
+            } else {
+                logger.info("Image {} is used by other packages, keeping it in filesystem", imageName);
+            }
+
+            logger.info("Image {} successfully removed from the db and related packages", imageName);
             auditLog.setStatus(AuditLogStatus.SUCCESS);
+
         } catch (ResourceNotFoundException ex) {
-            logger.error("error occur when updating a package: {}", ex.getResponseCode());
+            logger.error("Error occurred when removing package image: {}", ex.getResponseCode());
             auditLog.setStatus(AuditLogStatus.FAILED);
             throw new ResourceNotFoundException(ex.getResponseCode());
         } catch (Exception ex) {
-            logger.error("unknown error occur when removing a package image: {}", ex.getMessage());
+            logger.error("Unknown error occurred when removing a package image: {}", ex.getMessage());
             auditLog.setStatus(AuditLogStatus.FAILED);
             ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
             throw new ResourceDeleteException(ResponseCode.INTERNAL_SERVER_ERROR);
@@ -384,7 +414,7 @@ public class PackageServiceImpl implements PackageService {
 
                 PackageImage image = PackageImage.builder()
                         .packageId(packageId)
-                        .imageName(originalFilename)
+                        .imageName(originalFilename+packageId)
                         .imageType(fileContentType)
                         .imagePath(imagePath)
                         .mimeType(mimeType)

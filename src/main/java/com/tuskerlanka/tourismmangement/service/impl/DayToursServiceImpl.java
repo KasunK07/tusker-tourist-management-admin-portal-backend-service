@@ -1,9 +1,7 @@
 package com.tuskerlanka.tourismmangement.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tuskerlanka.tourismmangement.document.AuditLog;
-import com.tuskerlanka.tourismmangement.document.DayTours;
-import com.tuskerlanka.tourismmangement.document.TourImage;
+import com.tuskerlanka.tourismmangement.document.*;
 import com.tuskerlanka.tourismmangement.dto.*;
 import com.tuskerlanka.tourismmangement.enums.AuditLogAction;
 import com.tuskerlanka.tourismmangement.enums.AuditLogStatus;
@@ -11,6 +9,7 @@ import com.tuskerlanka.tourismmangement.enums.ResponseCode;
 import com.tuskerlanka.tourismmangement.exception.CreateDayTourException;
 import com.tuskerlanka.tourismmangement.exception.ResourceDeleteException;
 import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
+import com.tuskerlanka.tourismmangement.exception.UpdatePackageException;
 import com.tuskerlanka.tourismmangement.repository.DayToursImageRepository;
 import com.tuskerlanka.tourismmangement.repository.DayToursRepository;
 import com.tuskerlanka.tourismmangement.service.DayToursService;
@@ -65,7 +64,7 @@ public class DayToursServiceImpl implements DayToursService {
 
             final String dayToursId = savedDayTours.getId();
 
-            this.savePackageImages(imageFile, dayToursId, imageIdSet);
+            this.saveDayToursImages(imageFile, dayToursId, imageIdSet);
 
             savedDayTours.setImageIds(imageIdSet);
             this.dayToursRepository.save(savedDayTours);
@@ -81,7 +80,7 @@ public class DayToursServiceImpl implements DayToursService {
         }
     }
 
-    private void savePackageImages(MultipartFile imageFile, String tourId, Set<String> imageIdSet) throws Exception {
+    private void saveDayToursImages(MultipartFile imageFile, String tourId, Set<String> imageIdSet) throws Exception {
         try {
             String originalFilename = imageFile.getOriginalFilename();
             String imagePath = this.imageFolderPath + originalFilename;
@@ -104,28 +103,52 @@ public class DayToursServiceImpl implements DayToursService {
         }
     }
 
-//    public void updateDayTours(String DayToursId, UpdateDayTourDto updateDayTourDto, AuditLog auditLog) throws BaseException{
-//        logger.info("Updating day tours into database");
-//        auditLog.setAction(AuditLogAction.UPDATE_DAY_TOUR);
-//        auditLog.setLoggedAt(LocalDateTime.now());
-//
-//        try{
-//            logger.info("{}",updateDayTourDto);
-//
-//            Optional<DayTours> dayToursOptional = this.dayToursRepository.findById(DayToursId);
-//
-//            if(dayToursOptional.isEmpty()){
-//                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("error in retrieving data..");
-//                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
-//            }
-//
-//            dayToursOptional.get().setName(updateDayTourDto.getName());
-//            dayToursOptional.get().setDescription(updateDayTourDto.getDescription());
-//            dayToursOptional.get().setImageIds(updateDayTourDto.getImageDetails());
-//
-//        }catch (Exception e){}
-//
-//    }
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Override
+    public void updateDayTours(String dayTourId, UpdateDayTourDto updateDayToursDto, MultipartFile file, AuditLog auditLog)
+            throws ResourceNotFoundException, UpdatePackageException {
+        logger.info("entering update package service impl...");
+        auditLog.setAction(AuditLogAction.UPDATE_DAY_TOUR);
+        auditLog.setLoggedAt(LocalDateTime.now());
+
+        try {
+            Optional<DayTours> dayToursOptional = this.dayToursRepository.findById(dayTourId);
+
+            if (dayToursOptional.isEmpty()) {
+                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Day Tour is not available");
+                auditLog.setStatus(AuditLogStatus.FAILED);
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            DayTours existingDayTours = dayToursOptional.get();
+            existingDayTours.setName(updateDayToursDto.getName());
+            existingDayTours.setDescription(updateDayToursDto.getDescription());
+
+            if (file != null) {
+                Set<String> newImageIds = new HashSet<>();
+                saveDayToursImages(file, dayTourId, newImageIds);
+                Set<String> currentImageIds = existingDayTours.getImageIds() != null ? existingDayTours.getImageIds() : new HashSet<>();
+                currentImageIds.addAll(newImageIds);
+                existingDayTours.setImageIds(currentImageIds);
+            }
+
+            dayToursRepository.save(existingDayTours);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+            logger.info("Day Tours {} successfully updated", dayTourId);
+
+        } catch (ResourceNotFoundException ex) {
+            logger.error("error occur when updating a day tour: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new ResourceNotFoundException(ex.getResponseCode());
+        } catch (Exception ex) {
+            logger.error("unknown error occur when updating a day tour: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new UpdatePackageException(ResponseCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            this.auditLogService.save(auditLog);
+        }
+    }
 
     @Override
     public List<DayToursResponseDto> findAllDayTours() throws ResourceNotFoundException{
@@ -259,6 +282,74 @@ public class DayToursServiceImpl implements DayToursService {
             return Files.readAllBytes(new File(imagePath).toPath());
         } catch (Exception ex) {
             throw new Exception(ex);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    @Override
+    public void removePackageImageByImageName(String imageName, AuditLog auditLog) throws ResourceDeleteException, ResourceNotFoundException {
+        logger.info("Entering removeDayToursImageByImageName service impl...");
+        auditLog.setAction(AuditLogAction.DELETE_DAY_TOUR_IMAGE);
+        auditLog.setLoggedAt(LocalDateTime.now());
+
+        try {
+            Optional<TourImage> dayToursImageOptional = this.imageRepository.findByImageName(imageName);
+
+            if (dayToursImageOptional.isEmpty()) {
+                logger.warn("Day Tours image with name {} not found", imageName);
+                ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Day Tours  image is not available");
+                auditLog.setStatus(AuditLogStatus.FAILED);
+                throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+            }
+
+            TourImage tourImage = dayToursImageOptional.get();
+            String imageId = tourImage.getId();
+            String imagePath = tourImage.getImagePath();
+
+            List<DayTours> dayToursUsingImage = dayToursRepository.findByImageIdsContaining(imageId);
+            boolean isUsedByOtherDayTours = dayToursUsingImage.size() > 1;
+
+            imageRepository.delete(tourImage);
+            logger.info("Image {} removed from TourImage collection", imageName);
+            for (DayTours tours : dayToursUsingImage) {
+                Set<String> imageIds = tours.getImageIds();
+                if (imageIds.remove(imageId)) {
+                    dayToursRepository.save(tours);
+                    logger.info("Removed imageId {} from day tours {}", imageId, tours.getId());
+                }
+            }
+            if (!isUsedByOtherDayTours) {
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    if (imageFile.delete()) {
+                        logger.info("Deleted image file: {}", imagePath);
+                    } else {
+                        logger.warn("Failed to delete image file: {}", imagePath);
+                        ResponseCode.DATA_RETRIEVED_ERROR.setMessage("Image Path Doesn't exists");
+                        auditLog.setStatus(AuditLogStatus.FAILED);
+                        throw new ResourceNotFoundException(ResponseCode.DATA_RETRIEVED_ERROR);
+                    }
+                } else {
+                    logger.warn("Image file does not exist at path: {}", imagePath);
+                }
+            } else {
+                logger.info("Image {} is used by other day tours, keeping it in filesystem", imageName);
+            }
+
+            logger.info("Image {} successfully removed from the db and related packages", imageName);
+            auditLog.setStatus(AuditLogStatus.SUCCESS);
+
+        } catch (ResourceNotFoundException ex) {
+            logger.error("Error occurred when removing day tours image: {}", ex.getResponseCode());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            throw new ResourceNotFoundException(ex.getResponseCode());
+        } catch (Exception ex) {
+            logger.error("Unknown error occurred when removing a day tours image: {}", ex.getMessage());
+            auditLog.setStatus(AuditLogStatus.FAILED);
+            ResponseCode.INTERNAL_SERVER_ERROR.setReason(ex.getMessage());
+            throw new ResourceDeleteException(ResponseCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            this.auditLogService.save(auditLog);
         }
     }
 

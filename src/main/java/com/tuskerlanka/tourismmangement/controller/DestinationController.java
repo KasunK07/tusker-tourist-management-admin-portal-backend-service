@@ -3,10 +3,10 @@ package com.tuskerlanka.tourismmangement.controller;
 import com.tuskerlanka.tourismmangement.document.AuditLog;
 import com.tuskerlanka.tourismmangement.dto.CreateDestinationDto;
 import com.tuskerlanka.tourismmangement.dto.DestinationResponseDto;
+import com.tuskerlanka.tourismmangement.dto.UpdateDayTourDto;
+import com.tuskerlanka.tourismmangement.dto.UpdateDestinationsDto;
 import com.tuskerlanka.tourismmangement.enums.ResponseCode;
-import com.tuskerlanka.tourismmangement.exception.BaseException;
-import com.tuskerlanka.tourismmangement.exception.CreateDestinationException;
-import com.tuskerlanka.tourismmangement.exception.ResourceNotFoundException;
+import com.tuskerlanka.tourismmangement.exception.*;
 import com.tuskerlanka.tourismmangement.payload.ApiResponse;
 import com.tuskerlanka.tourismmangement.service.DestinationService;
 import com.tuskerlanka.tourismmangement.validation.image.ImageFile;
@@ -71,6 +71,25 @@ public class DestinationController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, response));
     }
 
+    @PutMapping(path = "/update/{destinationId}")
+    public ResponseEntity<ApiResponse> update(
+            @PathVariable String destinationId,
+            @RequestPart(name = "destination") UpdateDestinationsDto destinationsDto,
+            @RequestPart(name = "images", required = false) @Valid MultipartFile imageFiles)
+            throws ResourceNotFoundException, UpdateDestinationException {
+        logger.info("entering update day tour api end point...");
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setMethod("PUT");
+        auditLog.setEndPoint(END_POINT + "/update/" + destinationId);
+        auditLog.setUsername(USER_SYSTEM);
+
+        this.destinationService.updateDestinations(destinationId, destinationsDto, imageFiles, auditLog);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.getInstance(ResponseCode.DESTINATION_UPDATED_SUCCESSFULLY));
+    }
+
     @DeleteMapping(path = "/delete/{destinationId}")
     public ResponseEntity<ApiResponse> delete(@PathVariable String destinationId) throws BaseException {
         logger.info("entering delete destination api end point...");
@@ -92,5 +111,19 @@ public class DestinationController {
         int count = destinationService.getCount();
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.getInstance(ResponseCode.DATA_RETRIEVED_SUCCESS, count));
+    }
+
+    @DeleteMapping(path = "/delete/image/{imageName}")
+    public ResponseEntity<?> deleteImage(@PathVariable String imageName) throws ResourceDeleteException, ResourceNotFoundException {
+
+        logger.info("Getting the image by its name end point...{}", imageName);
+        AuditLog auditLog = new AuditLog();
+        auditLog.setMethod("DELETE");
+        auditLog.setEndPoint(END_POINT+"/delete/image/" + imageName);
+        auditLog.setUsername(USER_SYSTEM);
+
+        destinationService.removePackageImageByImageName(imageName,auditLog);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
